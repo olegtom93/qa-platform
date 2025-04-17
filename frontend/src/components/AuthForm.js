@@ -11,6 +11,7 @@ const AuthForm = () => {
   const [name, setName] = useState('')
   const [birthdate, setBirthdate] = useState('')
   const [gender, setGender] = useState('male')
+  const [agree, setAgree] = useState(false)
   const [token, setToken] = useState('')
   const [mode, setMode] = useState('register')
   const [message, setMessage] = useState('')
@@ -20,6 +21,11 @@ const AuthForm = () => {
     e.preventDefault()
     setShowModal(false)
     setMessage('')
+
+    if (mode === 'register' && !agree) {
+      setMessage('Пожалуйста, подтвердите согласие на обработку персональных данных')
+      return
+    }
 
     try {
       const url = mode === 'register' ? `${API}/register` : `${API}/login`
@@ -114,6 +120,23 @@ const AuthForm = () => {
               </label>
             </div>
             <br />
+            <label style={{ fontSize: '14px' }}>
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={e => setAgree(e.target.checked)}
+                style={{ marginRight: '8px' }}
+              />
+              Я соглашаюсь с{' '}
+              <a
+                href="https://rkn.gov.ru/docs/pd_rules.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                правилами обработки персональных данных
+              </a>
+            </label>
+            <br /><br />
           </>
         )}
 
@@ -123,13 +146,12 @@ const AuthForm = () => {
       </form>
 
       <br />
-
-     <button
+      <button
         className="toggle-btn"
-            onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
-       >
-       Переключить на {mode === 'register' ? 'вход' : 'регистрацию'}
-     </button>
+        onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
+      >
+        Переключить на {mode === 'register' ? 'вход' : 'регистрацию'}
+      </button>
 
       <br /><br />
       {token && (
