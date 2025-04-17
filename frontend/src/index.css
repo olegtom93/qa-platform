@@ -32,20 +32,19 @@ input {
 }
 
 button {
-  width: 100%;
-  padding: 0.7rem;
-  margin-top: 0.5rem;
-  background: #007bff;
-  border: none;
+ background-color: #ff7b00; /* ярко-оранжевый */
   color: white;
-  font-size: 1rem;
-  border-radius: 0.5rem;
+  font-weight: bold;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   cursor: pointer;
-  transition: background 0.3s;
+  transition: 0.3s ease;
 }
 
 button:hover {
-  background: #0056b3;
+  background: #ff9800;
 }
 
 p {
