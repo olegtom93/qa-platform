@@ -123,9 +123,13 @@ const AuthForm = () => {
       </form>
 
       <br />
-      <button onClick={() => setMode(mode === 'register' ? 'login' : 'register')}>
-        Переключить на {mode === 'register' ? 'вход' : 'регистрацию'}
-      </button>
+
+     <button
+        className="toggle-btn"
+            onClick={() => setMode(mode === 'register' ? 'login' : 'register')}
+       >
+       Переключить на {mode === 'register' ? 'вход' : 'регистрацию'}
+     </button>
 
       <br /><br />
       {token && (
