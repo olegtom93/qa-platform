@@ -25,6 +25,12 @@ services:
       - "4000"
     depends_on:
       - db
+      - graylog
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://172.18.0.4:12201"
+        tag: "backend"
 
   frontend:
     build: ./frontend
@@ -42,6 +48,56 @@ services:
       - backend
     ports:
       - "80:80"
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://172.18.0.4:12201"
+        tag: "nginx"
+
+  # Graylog stack
+  mongo:
+    image: mongo:6.0
+    container_name: graylog-mongo
+    volumes:
+      - mongo_data:/data/db
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: graylog-es
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  graylog:
+    image: graylog/graylog:5.1
+    container_name: graylog
+    environment:
+      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918  # пароль "admin"
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://147.45.142.249:9000/
+      - GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE=512m  # ← уменьшено с 5120MB до 512MB
+    entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 -- /docker-entrypoint.sh
+    depends_on:
+      - mongo
+      - elasticsearch
+    ports:
+      - "9000:9000"         # Web-интерфейс Graylog
+      - "12201:12201/udp"   # GELF вход
+      - "1514:1514"
+      - "1514:1514/udp"
+    volumes:
+      - graylog_data:/usr/share/graylog/data
 
 volumes:
   db_data:
+  mongo_data:
+  es_data:
+  graylog_data:
