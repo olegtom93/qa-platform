@@ -1,10 +1,10 @@
-
 import express from 'express'
 import cors from 'cors'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import pkg from 'pg'
 import dotenv from 'dotenv'
+import { Kafka } from 'kafkajs'
 
 dotenv.config()
 const { Pool } = pkg
@@ -21,6 +21,46 @@ const pool = new Pool({
   database: process.env.DB_NAME,
 })
 
+// Подключение Kafka
+const kafka = new Kafka({
+  clientId: 'qa-platform',
+  brokers: ['kafka:9092'],
+})
+
+const producer = kafka.producer()
+await producer.connect()
+
+const consumer = kafka.consumer({ groupId: 'user-group' })
+
+const runKafkaConsumer = async () => {
+  await consumer.connect()
+  await consumer.subscribe({ topic: 'qa-createUser', fromBeginning: false })
+
+  await consumer.run({
+    eachMessage: async ({ topic, partition, message }) => {
+      try {
+        const payload = JSON.parse(message.value.toString())
+        const { email, password, name, birthdate, gender } = payload
+
+        const hashed = await bcrypt.hash(password, 10)
+
+        await pool.query(
+          'INSERT INTO users (email, password, name, birthdate, gender) VALUES ($1, $2, $3, $4, $5)',
+          [email, hashed, name, birthdate, gender]
+        )
+
+        console.log(`✅ Пользователь ${email} создан через Kafka`)
+      } catch (err) {
+        console.error('❌ Ошибка при создании пользователя через Kafka:', err)
+      }
+    },
+  })
+}
+
+runKafkaConsumer().catch(console.error)
+
+// REST API
+
 app.get('/status', (req, res) => {
   res.send('Backend is running ✅')
 })
@@ -34,6 +74,17 @@ app.post('/register', async (req, res) => {
       'INSERT INTO users (email, password, name, birthdate, gender) VALUES ($1, $2, $3, $4, $5)',
       [email, hashed, name, birthdate, gender]
     )
+
+    // Отправка в Kafka
+    await producer.send({
+      topic: 'qa-testRegister',
+      messages: [
+        {
+          value: JSON.stringify({ email, name, birthdate, gender, source: 'rest' }),
+        },
+      ],
+    })
+
     res.json({ message: 'User registered' })
   } catch (err) {
     res.status(400).json({ error: 'Email already exists' })
