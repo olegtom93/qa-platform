@@ -67,13 +67,15 @@ app.get('/status', (req, res) => {
 
 app.post('/register', async (req, res) => {
   const { email, password, name, birthdate, gender } = req.body
-  const hashed = await bcrypt.hash(password, 10)
+  console.log('POST /register received:', { email, password, name, birthdate, gender });
 
   try {
+    const hashed = await bcrypt.hash(password, 10)
     await pool.query(
       'INSERT INTO users (email, password, name, birthdate, gender) VALUES ($1, $2, $3, $4, $5)',
       [email, hashed, name, birthdate, gender]
     )
+    console.log(`User ${email} successfully registered in database`);
 
     // Отправка в Kafka
     await producer.send({
@@ -84,10 +86,12 @@ app.post('/register', async (req, res) => {
         },
       ],
     })
+    console.log(`Sent to Kafka topic qa-testRegister for user ${email}`);
 
     res.json({ message: 'User registered' })
   } catch (err) {
-    res.status(400).json({ error: 'Email already exists' })
+    console.error('Error in POST /register:', err.message);
+    res.status(400).json({ error: 'Email already exists or invalid data' })
   }
 })
 

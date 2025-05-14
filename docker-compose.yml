@@ -151,6 +151,19 @@ services:
     networks:
       - graylog-net
 
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger-ui
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./swagger:/usr/share/nginx/html/swagger
+    environment:
+      SWAGGER_JSON: /swagger/swagger.yaml
+    networks:
+      - graylog-net
+
+
 volumes:
   db_data:
   mongo_data:

@@ -1,0 +1,77 @@
+openapi: 3.0.0
+info:
+  title: QA Platform API
+  version: 1.0.0
+  description: API для регистрации, логина и проверки токена
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /status:
+    get:
+      summary: Проверка статуса сервера
+      responses:
+        '200':
+          description: Сервер работает
+
+  /register:
+    post:
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, birthdate, gender]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                birthdate:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+      responses:
+        '200':
+          description: Пользователь успешно зарегистрирован
+
+  /login:
+    post:
+      summary: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Успешный вход, возвращается токен
+
+  /me:
+    get:
+      summary: Получение данных пользователя по JWT
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+          example: Bearer <JWT>
+      responses:
+        '200':
+          description: Данные пользователя
+        '401':
+          description: Неверный или отсутствующий токен
