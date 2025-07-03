@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.10'
 
 services:
   db:
@@ -163,6 +163,28 @@ services:
     networks:
       - graylog-net
 
+  rustdesk-hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: rustdesk-hbbr
+    command: hbbr
+    ports:
+      - "21117:21117"
+      - "21118:21118/udp"
+    networks:
+      - graylog-net
+
+  rustdesk-hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: rustdesk-hbbs
+    command: hbbs -r rustdesk-hbbr:21117 -k mSeR8YbizfnHdyI90zxllLSsINQ3WzBlGaDvG8IcBq4=
+    depends_on:
+      - rustdesk-hbbr
+    ports:
+      - "21115:21115"
+      - "21116:21116"
+      - "21116:21116/udp"
+    networks:
+      - graylog-net
 
 volumes:
   db_data:
