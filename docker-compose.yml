@@ -31,7 +31,7 @@ services:
     logging:
       driver: "gelf"
       options:
-        gelf-address: "udp://172.21.0.7:12201"
+        gelf-address: "udp://172.21.0.8:12201"
         tag: "backend"
     networks:
       - graylog-net
@@ -57,7 +57,7 @@ services:
     logging:
       driver: "gelf"
       options:
-        gelf-address: "udp://172.21.0.7:12201"
+        gelf-address: "udp://172.21.0.8:12201"
         tag: "nginx"
     networks:
       - graylog-net
