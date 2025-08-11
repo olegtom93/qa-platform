@@ -32,7 +32,7 @@ input {
 }
 
 button {
- background-color: #ff7b00; /* ярко-оранжевый */
+ background-color: #f81894; /* горячий-розовый */
   color: black;
   font-weight: bold;
   padding: 12px 24px;
@@ -66,3 +66,4 @@ p {
 .toggle-btn:hover {
   background-color: #1976d2;
 }
+
