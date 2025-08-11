@@ -32,7 +32,7 @@ input {
 }
 
 button {
- background-color: #ff7b00; /* ярко-оранжевый */
+ background-color: #ff1493; /* глубокий-розовый */
   color: black;
   font-weight: bold;
   padding: 12px 24px;
@@ -44,7 +44,7 @@ button {
 }
 
 button:hover {
-  background: #ff9800;
+  background: #ffadd9;
 }
 
 p {
