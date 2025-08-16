@@ -1,5 +1,3 @@
-version: '3.10'
-
 services:
   db:
     image: postgres:16
@@ -23,11 +21,16 @@ services:
       DB_PASSWORD: testpass
       DB_NAME: testdb
       JWT_SECRET: supersecret
+      KAFKA_BROKERS: kafka:9092   # <-- добавлено
     expose:
       - "4000"
     depends_on:
-      - db
-      - graylog
+      db:
+        condition: service_started
+      graylog:
+        condition: service_started
+      kafka:                       # <-- ждём Kafka
+        condition: service_healthy
     logging:
       driver: "gelf"
       options:
@@ -116,24 +119,37 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     networks:
       - graylog-net
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     networks:
       - graylog-net
+    # Если Kafka нужна только для внутренних сервисов, этот порт можно убрать.
+    ports:
+      - "9092:9092"
 
   akhq:
     image: tchiotludo/akhq
@@ -147,7 +163,8 @@ services:
               properties:
                 bootstrap.servers: "kafka:9092"
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - graylog-net
 
